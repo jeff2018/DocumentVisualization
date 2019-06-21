@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script
+            src="https://code.jquery.com/jquery-3.4.1.js"
+            integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU="
+            crossorigin="anonymous"></script>
+</head>
+<body>
+
+</body>
+<script>
+    var compareArray = ['dbr:Ontology',
+        'dbr:Visualization_(computer_graphics)',
+        'dbr:Concept',
+        'dbr:Information_visualization',
+        'dbr:Document',
+        'dbr:Teacher',
+        'dbr:Tool',
+        'dbr:File_manager',
+        'dbr:Computer_science',
+        'dbr:Ontology_(information_science)',
+        'dbr:Ontology_engineering',
+        'dbr:Information_retrieval',
+        'dbr:Parent',
+        'dbr:Child',
+        'dbr:Portable_Document_Format',
+        'dbr:Resource',
+        'dbr:Greek_language',
+        'dbr:Metaphysics',
+        'dbr:Philosophy',
+        'dbr:Paradox',
+        'dbr:Willard_Van_Orman_Quine',
+        'dbr:Circle',
+        'dbr:Computer_graphics',
+        'dbr:Carl_Linnaeus',
+        'dbr:Web_search_engine',
+        'dbr:A',
+        'dbr:Judge',
+        'dbr:Algorithm',
+        'dbr:Hebrew_language',
+        'dbr:Netherlands',
+        'dbr:Geometry',
+        'dbr:Biology']
+    var resultingData = []
+    //cat(compareArray)
+    commonClasses(compareArray)
+
+    var noData = []
+
+
+
+
+    async function commonClasses(compareArray) {
+        var classArray = []
+        var resultingJson = []
+
+        for (var i = 0; i < compareArray.length; i++) {
+
+            var concept = compareArray[i];
+            console.log(concept)
+            var res = await querySPARQL(concept)
+            if (res[0]) {
+                for (var r = 0; r < res[0].length; r++) {
+                    var c = res[0][r].class.value
+                    //console.log(c)
+                    if (c.includes("http://dbpedia.org/ontology/") || c.includes("owl#Thing")) {
+                        if (!classArray.includes(c)) {
+                            classArray.push(c)
+                            resultingJson.push({
+                                "dbpediaClass": c,
+                                "concepts": []
+
+                            })
+                        }
+                    }
+                    for (var k = 0; k < resultingJson.length; k++) {
+                        if (c === resultingJson[k].dbpediaClass) {
+                            if (!resultingJson[k].concepts.includes(concept)) {
+                                resultingJson[k].concepts.push(concept)
+
+                            }
+
+
+                        }
+                    }
+
+
+                }
+                console.log(concept, res)
+
+            } else {
+                noData.push(concept)
+            }
+
+        }
+        console.log(resultingJson)
+        console.log(noData)
+
+    }
+
+    async function querySPARQL(c) {
+        var url = "http://dbpedia.org/sparql";
+
+
+        var resp = []
+        const escapeRegExp = (string) => {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        }
+        var update_c = escapeRegExp(c)
+
+
+        //console.log(finalResource)
+
+        var query = [
+            "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>",
+            "PREFIX type: <http://dbpedia.org/class/yago/>",
+            "PREFIX prop: <http://dbpedia.org/property/>",
+            "SELECT DISTINCT ?class",
+            "WHERE {",
+
+            " " + update_c + " rdf:type ?class.",
+            "}",
+            "Limit 100"
+        ].join(" ");
+
+
+        console.log("this query: [" + query + "]");
+
+        var queryUrl = url + "?query=" + encodeURIComponent(query) + "&format=json";
+        //console.log(queryUrl)
+
+        await $.ajax({
+            dataType: "jsonp",
+            url: queryUrl,
+            success: function (data) {
+                //console.log("success",data);
+                var bindings = data.results.bindings;
+                if (bindings.length !== 0) {
+                    resp.push(bindings)
+                } else {
+                    console.log("no result for ", update_c)
+                }
+
+            }
+        });
+        return resp
+    }
+
+    var response = [
+        {
+            "dbpediaClass": "http://www.w3.org/2002/07/owl#Thing",
+
+            "concepts": [
+                /*
+                "dbr:Ontology",
+                "dbr:Concept",
+                "dbr:Document",
+                "dbr:Teacher",
+                "dbr:Tool",
+                "dbr:File_manager",
+                "dbr:Computer_science",
+                "dbr:Ontology_(information_science)",
+                "dbr:Information_retrieval",
+                "dbr:Portable_Document_Format",
+                "dbr:Resource",
+                "dbr:Greek_language",
+                "dbr:Metaphysics",
+                "dbr:Paradox",
+                "dbr:Willard_Van_Orman_Quine",
+                "dbr:Circle",
+                "dbr:Computer_graphics",
+                "dbr:Carl_Linnaeus",
+                "dbr:Judge",
+                "dbr:Algorithm",
+                "dbr:Hebrew_language",
+                "dbr:Netherlands",
+                "dbr:Geometry",
+                "dbr:Biology"
+                */
+            ]
+        },
+        {
+            "dbpediaClass": "http://dbpedia.org/ontology/Book",
+            "concepts": [
+                "dbr:Ontology",
+                "dbr:Information_visualization"
+            ]
+        },
+        {
+            "dbpediaClass": "http://dbpedia.org/ontology/Person",
+            "concepts": [
+                "dbr:Teacher",
+                "dbr:Parent",
+                "dbr:Willard_Van_Orman_Quine",
+                "dbr:Carl_Linnaeus"
+            ]
+        },
+        {
+            "dbpediaClass": "http://dbpedia.org/ontology/TelevisionShow",
+            "concepts": [
+                "dbr:File_manager"
+            ]
+        },
+        {
+            "dbpediaClass": "http://dbpedia.org/ontology/Organisation",
+            "concepts": [
+                "dbr:Computer_science",
+                "dbr:Greek_language",
+                "dbr:Metaphysics",
+                "dbr:Geometry"
+            ]
+        },
+        {
+            "dbpediaClass": "http://dbpedia.org/ontology/Sport",
+            "concepts": [
+                "dbr:Information_retrieval"
+            ]
+        },
+        {
+            "dbpediaClass": "http://dbpedia.org/ontology/Software",
+            "concepts": [
+                "dbr:Portable_Document_Format"
+            ]
+        },
+        {
+            "dbpediaClass": "http://dbpedia.org/ontology/Language",
+            "concepts": [
+                "dbr:Greek_language",
+                "dbr:Hebrew_language"
+            ]
+        },
+        {
+            "dbpediaClass": "http://dbpedia.org/ontology/Agent",
+            "concepts": [
+                "dbr:Willard_Van_Orman_Quine",
+                "dbr:Carl_Linnaeus"
+            ]
+        },
+        {
+            "dbpediaClass": "http://dbpedia.org/ontology/Philosopher",
+            "concepts": [
+                "dbr:Willard_Van_Orman_Quine"
+            ]
+        },
+        {
+            "dbpediaClass": "http://dbpedia.org/ontology/Album",
+            "concepts": [
+                "dbr:Circle"
+            ]
+        },
+        {
+            "dbpediaClass": "http://dbpedia.org/ontology/Film",
+            "concepts": [
+                "dbr:Computer_graphics"
+            ]
+        },
+        {
+            "dbpediaClass": "http://dbpedia.org/ontology/Scientist",
+            "concepts": [
+                "dbr:Carl_Linnaeus"
+            ]
+        },
+        {
+            "dbpediaClass": "http://dbpedia.org/ontology/ProgrammingLanguage",
+            "concepts": [
+                "dbr:A"
+            ]
+        },
+        {
+            "dbpediaClass": "http://dbpedia.org/ontology/RadioStation",
+            "concepts": [
+                "dbr:A"
+            ]
+        },
+        {
+            "dbpediaClass": "http://dbpedia.org/ontology/Place",
+            "concepts": [
+                "dbr:Netherlands"
+            ]
+        },
+        {
+            "dbpediaClass": "http://dbpedia.org/ontology/Location",
+            "concepts": [
+                "dbr:Netherlands"
+            ]
+        },
+        {
+            "dbpediaClass": "http://dbpedia.org/ontology/Country",
+            "concepts": [
+                "dbr:Netherlands"
+            ]
+        },
+        {
+            "dbpediaClass": "http://dbpedia.org/ontology/PopulatedPlace",
+            "concepts": [
+                "dbr:Netherlands"
+            ]
+        },
+        {
+            "dbpediaClass": "http://dbpedia.org/ontology/Work",
+            "concepts": [
+                "dbr:Biology"
+            ]
+        }
+    ]
+
+    var noEntry = [
+        "dbr:Ontology_engineering",
+        "dbr:Child",
+        "dbr:Philosophy"
+    ]
+
+
+    response.sort((a, b) => b.concepts.length - a.concepts.length)
+    console.log(response)
+
+    async function filterResults(response) {
+        var i = 0
+        var s = 0
+        var filterResults = []
+        var newKeys = []
+        console.log(compareArray.length)
+        while (compareArray.length !== 0) {
+            //console.log("Enter loop", i)
+            var classDb = response[i].dbpediaClass
+            var concepts = response[i].concepts
+
+            for (var c = 0; c < concepts.length; c++) {
+                console.log(concepts[c])
+                //if (concepts.length > 1) {
+                    if (compareArray.includes(concepts[c])) {
+                        compareArray = compareArray.filter(item => item !== concepts[c])
+                        if (!newKeys.includes(classDb)) {
+                            filterResults.push({
+                                "dbpediaClass": classDb,
+                                "concepts": []
+                            })
+                            newKeys.push(classDb)
+                        }
+
+
+                    }
+
+                //}
+
+                for (var f = 0; f < filterResults.length; f++) {
+                    if (classDb === filterResults[f].dbpediaClass) {
+                        filterResults[f].concepts.push(concepts[c])
+                    }
+                }
+
+            }
+            s++
+            i++
+            if (s === response.length) {
+                //console.log("CA", compareArray)
+                filterResults.push({
+                    "dbpediaClass":"owl:Thing",
+                    "concepts":compareArray
+                })
+                break;
+            }
+        }
+        console.log(filterResults)
+
+        return filterResults
+    }
+
+    //filterResults(response)
+
+    async function getCategories(compareArray){
+        var results=[]
+        for (var i = 0; i < compareArray.length; i++) {
+            var categories =[]
+
+            var concept = compareArray[i];
+            console.log(concept)
+            var res = await queryCatSPARQL(concept)
+            //console.log(res)
+            results.push({
+                "concept":concept,
+                "categories":[]
+            })
+            var response = res[0]
+            var resultingCategories = results[i].categories
+            for(var r = 0;r<response.length;r++){
+                var category = response[r].class.value
+                var broader = response[r].broader.value
+
+                if(!categories.includes(category)){
+                    categories.push(category)
+                    console.log(resultingCategories)
+                    resultingCategories.push({
+                        "category":category,
+                        "broader":[]
+                    })
+                }
+                for(var k = 0;k<resultingCategories.length;k++){
+                    if(resultingCategories[k].category===category){
+
+                        resultingCategories[k].broader.push(broader)
+                    }
+                }
+
+            }
+        }
+
+        console.log(results)
+        return results;
+    }
+    //var categories = getCategories(compareArray)
+    async function queryCatSPARQL(c) {
+        var url = "http://dbpedia.org/sparql";
+
+
+        var resp = []
+        const escapeRegExp = (string) => {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        }
+        var update_c = escapeRegExp(c)
+        var wikiLink = "?link"
+        var dbPage = "?dbPage"
+        var broader = "?broader"
+
+
+        //console.log(finalResource)
+
+        var query = [
+            "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>",
+            "PREFIX type: <http://dbpedia.org/class/yago/>",
+            "PREFIX prop: <http://dbpedia.org/property/>",
+            "SELECT DISTINCT ?class, "+wikiLink+","+dbPage+","+broader,
+            "WHERE {{",
+
+            " " + update_c + " dct:subject ?class.",
+            "?class skos:broader"+broader+".",
+            "}",
+            "UNION{",
+            " " + update_c + " dbo:wikiPageRedirects " + dbPage + ".",
+            " " + wikiLink + " foaf:primaryTopic " + dbPage + ".",
+            " " + dbPage + " dct:subject ?class.",
+            "?class skos:broader"+broader+".",
+            "}",
+            "} Limit 100"
+        ].join(" ");
+
+
+        console.log("this query: [" + query + "]");
+
+        var queryUrl = url + "?query=" + encodeURIComponent(query) + "&format=json";
+        //console.log(queryUrl)
+
+        await $.ajax({
+            dataType: "jsonp",
+            url: queryUrl,
+            success: function (data) {
+                //console.log("success",data);
+                var bindings = data.results.bindings;
+                if (bindings.length !== 0) {
+                    resp.push(bindings)
+                } else {
+                    console.log("no result for ", update_c)
+                }
+
+            }
+        });
+        return resp
+    }
+
+    /*
+    async function cat(compareArray){
+
+        var categories = []
+        var resultingJson = []
+        for(var i = 0; i< compareArray.length;i++){
+            for(var j = i+1 ;j<compareArray.length;j++){
+                var c1= compareArray[i]
+                var c2=compareArray[j]
+                console.log("conpect pair",c1,c2)
+                var res = await querySPARQL(c1,c2)
+                console.log("result",res)
+                if(res[0]){
+                    for (var r = 0; r< res[0].length;r++){
+                        var c = res[0][r].category.value
+                        if(!categories.includes(c)){
+                            categories.push(c)
+                            console.log("new category",c)
+                            resultingJson.push({
+                                "categoryName":c,
+                                "concepts":[]
+
+                            })
+
+                        }
+                        for (var k = 0; j<resultingJson.length;k++){
+                            if(c === resultingJson[j].categoryName){
+                                if(!resultingJson[j].concepts.includes(c1)){
+                                    resultingJson[j].concepts.push(c1)
+
+                                }
+                                if(!resultingJson[j].concepts.includes(c2)){
+                                    resultingJson[j].concepts.push(c2)
+
+                                }
+
+                            }
+                        }
+                    }
+
+
+
+                }
+
+            }
+
+
+        }
+        console.log(resultingJson)
+    }
+
+    async function querySPARQL(c1,c2) {
+        var url = "http://dbpedia.org/sparql";
+
+
+        var resp = []
+        const escapeRegExp = (string) => {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        }
+        var update_c1 = escapeRegExp(c1)
+        var update_c2 = escapeRegExp(c2)
+
+        //console.log(finalResource)
+
+        var query = [
+            "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>",
+            "PREFIX type: <http://dbpedia.org/class/yago/>",
+            "PREFIX prop: <http://dbpedia.org/property/>",
+            "SELECT DISTINCT ?category",
+            "WHERE {",
+
+            "?category",
+            "^(dct:subject/(skos:broader{0,2}))",
+            " " + update_c1+ ",",
+            " " + update_c2+ ".",
+            "}",
+            "Limit 100"
+        ].join(" ");
+
+
+        console.log("this query: [" + query + "]");
+
+        var queryUrl = url + "?query=" + encodeURIComponent(query) + "&format=json";
+        //console.log(queryUrl)
+
+        await $.ajax({
+            dataType: "jsonp",
+            url: queryUrl,
+            success: function (data) {
+                //console.log("success",data);
+                var bindings = data.results.bindings;
+                if(bindings.length !== 0){
+                    resp.push(bindings)
+
+                }
+
+            }
+        });
+        return resp
+    }
+*/
+
+
+</script>
+</html>
