@@ -906,7 +906,7 @@ nodesGraph.append('text')
 
 });*/
 
-/*
+
 d3.select(document).on('click', function () {
 
         let target = d3.event.target;
@@ -977,7 +977,7 @@ d3.select(document).on('click', function () {
     }
 )
 
-*/
+
 function ticked() {
     //console.log("ticking")
     var link = svg.selectAll(".link")
@@ -1108,7 +1108,6 @@ links.style('fill', 'none')
      });
      node.select('circle')
          .attr('r', d => d.r);
-    simulation.alphaTarget(0);
  }
 
  function restart(){
@@ -2165,6 +2164,10 @@ function update(h) {
         }
     })
 
-simulation.alphaTarget(0.5).restart()
+simulation.alphaTarget(0.9).restart()
+simulation.force('collide', forceCollide);
+
+
+
 //restart()
 }
