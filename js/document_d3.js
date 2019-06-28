@@ -528,13 +528,15 @@ var data={
     ]
 }
 
-
+var sorted = data.nodes.sort(function(a,b){
+    return b.avgDegree - a.avgDegree
+})
 
 var pageArray = ["Page 1", "Page 2", "Page 3", "Page 4", "Page 5", "Page 6"];
 
 var svg = d3.select("svg"),
     width = document.body.clientWidth,
-    height = +svg.attr("height"),
+    height = document.body.clientHeight,
     centerX = width * 0.5,
     centerY = height * 0.5,
     strength = 0.05;
@@ -545,7 +547,7 @@ var pageMode = false;
 var pageWheel;
 var infoBox;
 
-var scaleRadius = d3.scaleLinear().domain([0, pageArray.length]).range([45, 95]);
+var scaleRadius = d3.scaleLinear().domain([0, pageArray.length]).range([45, 75]);
 var maxRadiusFocusNode = centerY * 0.75;
 
 var color = d3.scaleSequential(d3.interpolateRainbow);
@@ -613,72 +615,25 @@ console.log(simulation.force("link").links())
 
 
 
-/*
-var x = d3.scaleLinear()
-    .domain([0, 180])
-    .range([0, width])
-    .clamp(true);
-
-var slider = svg.append("g")
-    .attr("class", "slider")
-    .attr("transform", "translate(50,30)");
-
-slider.append("line")
-    .attr("class", "track")
-    .attr("x1", x.range()[0])
-    .attr("x2", x.range()[1])
-    .select(function() { return this.parentNode.appendChild(this.cloneNode(true)); })
-    .attr("class", "track-inset")
-    .select(function() { return this.parentNode.appendChild(this.cloneNode(true)); })
-    .attr("class", "track-overlay")
-    .call(d3.drag()
-        .on("start.interrupt", function() { slider.interrupt(); })
-        .on("start drag", function(d) {hue(x.invert(d3.event.x)) }));
-
-slider.insert("g", ".track-overlay")
-    .attr("class", "ticks")
-    .attr("transform", "translate(0," + 18 + ")")
-    .selectAll("text")
-    .data(x.ticks(10))
-    .enter().append("text")
-    .attr("x", x)
-    .attr("text-anchor", "middle")
-    .text(function(d) { return d + "°"; });
-
-var handle = slider.insert("circle", ".track-overlay")
-    .attr("class", "handle")
-    .attr("r", 9);
-slider.transition() // Gratuitous intro!
-    .duration(750)
-    .tween("hue", function() {
-        var i = d3.interpolate(0, 70);
-        return function(t) { hue(i(t)); };
-    });
-
-function hue(h) {
-    handle.attr("cx", x(h));
-    console.log(h)
-    //svg.style("background-color", d3.hsl(h, 0.8, 0.8));
-}*/
-
 var step = 1,
     range = [1,32]
 
 var slider = svg.append('g')
     .classed('slider', true)
-    .attr('transform', 'translate(50, 30)');
+    .attr('transform', 'translate('+(centerX-width/6)+', '+(height*0.95)+'30)');
 
 // using clamp here to avoid slider exceeding the range limits
 var xScale = d3.scaleLinear()
     .domain(range)
-    .range([0, width/2])
+    .range([0, width/3])
     .clamp(true);
 
 // array useful for step sliders
 var rangeValues = d3.range(range[0], range[1], step || 1).concat(range[1]);
-var xAxis = d3.axisBottom(xScale).ticks(5).tickFormat(function (d) {
+var xAxis = d3.axisBottom(xScale).tickFormat(function (d) {
     return d;
 });
+xAxis.tickValues(xScale.ticks(5).concat(xScale.domain()))
 
 xScale.clamp(true);
 // drag behavior initialization
@@ -710,17 +665,17 @@ var trackOverlay = d3.select(slider.node().appendChild(track.node().cloneNode())
     .call(drag);
 
 // text to display
-var text = svg.append('text').attr('transform', 'translate(' + (width/2) + ', ' + height/3 + ')')
+var text = svg.append('text').attr('transform', 'translate(' + (centerX) + ', ' + (height*0.99) + ')')
     .text('Value: 0');
 
 // initial transition
-/*slider.transition().duration(750)
+slider.transition().duration(750)
     .tween("drag", function () {
-        var i = d3.interpolate(0, 32);
+        var i = d3.interpolate(0, 16);
         return function (t) {
             dragged2(xScale(i(t)));
         }
-    });*/
+    });
 
 function dragged2(value) {
 
@@ -779,7 +734,8 @@ nodes.forEach(function(node, i) {
             node.associatedNodes.push(nodes[link.target.index])
         }
     })
-})/*
+})
+/*
 var sorted = nodes.sort(function(a,b){
     return b.degree - a.degree
 })
@@ -833,7 +789,7 @@ let nodesGraph = svg.selectAll('.node')
             .on("end", dragended));
 
 nodesGraph.append('circle')
-    .attr('id', d => "c_" + d.index)
+    .attr('id', d => "c_" + d.id)
     .attr('r', 0)
     .attr("class", "circle")
     .style("stroke-width",0.5)
@@ -891,7 +847,7 @@ nodesGraph.append('text')
         return d.name
     })
     .each(function (d, i) {
-        let r = d3.select("circle[id='c_" + i + "']").attr("r")
+        let r = d3.select("circle[id='c_" + d.id + "']").attr("r")
         svg.select("#t_" + i)
             .call(wrap2, 2 * r)
 
@@ -920,7 +876,7 @@ d3.select(document).on('click', function () {
             focusNode.fx = null;
             focusNode.fy = null;
             console.log(focusNode)
-            simulation.alphaTarget(0.2).restart();
+            simulation.alphaTarget(0.35).restart();
             d3.transition().duration(1000).ease(d3.easePolyOut)
                 .tween('moveOut', function () {
 
@@ -931,7 +887,7 @@ d3.select(document).on('click', function () {
                     }
                 })
                 .on('end', () => {
-                    let circle = d3.select("circle[id='c_" + focusNode.index + "']")
+                    let circle = d3.select("circle[id='c_" + focusNode.id + "']")
                     circle.style('fill', function (d) {
                         if (focusNode.nbrPages === 0) {
                             return "lightgrey";
@@ -958,7 +914,7 @@ d3.select(document).on('click', function () {
 
             d3.selectAll('.node')
                 .filter(function (d, i) {
-                    return i !== focusNode.index;
+                    return d.id !== focusNode.id;
                 })
                 .transition().duration(2000)
                 .style('opacity', 1.0);
@@ -1053,7 +1009,7 @@ links.style('fill', 'none')
                 .on("end", dragended))
 
      nodeEnter.append("circle")
-            .attr('id', d => "c_" + d.index)
+            .attr('id', d => "c_" + d.id)
             .attr('r', 0)
             .attr("class", "circle")
             .style("stroke-width",0.5)
@@ -1092,7 +1048,7 @@ links.style('fill', 'none')
         })
         .each(function (d, i) {
 
-            let r = d3.select("circle[id='c_" + d.index + "']").attr("r")
+            let r = d3.select("circle[id='c_" + d.id + "']").attr("r")
 
             svg.select("#t_" + i)
                 .call(wrap2, 2 * r)
@@ -1108,6 +1064,8 @@ links.style('fill', 'none')
      });
      node.select('circle')
          .attr('r', d => d.r);
+
+
  }
 
  function restart(){
@@ -1286,14 +1244,16 @@ async function moveToCenter(currentNode) {
     if (infoBox) {
         infoBox.remove()
     }
+    simulation.alphaTarget(0.2).restart()
 
     if (lastNode) {
         console.log("lastNode", lastNode)
 
         lastNode.fx = null;
         lastNode.fy = null;
-        node.filter(function (d, i) {
-            return i === lastNode.index
+        d3.selectAll('.node').filter(function (d, i) {
+            console.log(d.id,lastNode.id)
+            return d.id === lastNode.id
         })
             .transition().duration(2000)
             .tween('circleOut', await function () {
@@ -1308,8 +1268,9 @@ async function moveToCenter(currentNode) {
                 }
             })
             .on('interrupt', () => {
+
                 lastNode.r = scaleRadius(lastNode.nbrPages);
-                let circle = d3.select("circle[id='c_" + lastNode.index + "']")
+                let circle = d3.select("circle[id='c_" + lastNode.id + "']")
                 circle.style('fill', function (d) {
                     if (lastNode.nbrPages === 0) {
                         return "lightgrey";
@@ -1329,7 +1290,6 @@ async function moveToCenter(currentNode) {
             });
     }
 
-    simulation.alphaTarget(0.2).restart()
 
     d3.transition().duration(2000)
         .tween('moveIn', function () {
@@ -1360,10 +1320,11 @@ async function moveToCenter(currentNode) {
         });
     d3.selectAll('.node')
         .filter(function (d, i) {
-            return i !== currentNode.index;
+            return d.id !== currentNode.id;
         })
         .transition().duration(2000)
         .style('opacity', 0.5);
+    stabalize()
     //drawArc(currentNode)
     /*
     d3.selectAll('.node')
@@ -1411,6 +1372,8 @@ async function moveToCenter(currentNode) {
         var k = "translate(" + width / 2 + "," + height / 2 +")";
         return k
     })*/
+    simulation.alphaTarget(0.2).restart()
+
 }
 
 
@@ -1554,6 +1517,12 @@ async function drawArc(currentNode) {
 
 }
 
+function stabalize(){
+    setTimeout(function(){
+
+        simulation.alphaTarget(0);
+    }, 5000);
+}
 async function drawInfoBox(currentNode) {
 
     var results = await querySPARQL(currentNode);
@@ -2164,8 +2133,9 @@ function update(h) {
         }
     })
 
-simulation.alphaTarget(0.9).restart()
+simulation.alphaTarget(0.2).restart()
 simulation.force('collide', forceCollide);
+stabalize()
 
 
 
