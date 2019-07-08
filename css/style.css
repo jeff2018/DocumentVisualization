@@ -26,3 +26,8 @@
     height: 200px;
     overflow: scroll;
 }
+.zoom {
+    cursor: move;
+    fill: none;
+    pointer-events: all;
+}

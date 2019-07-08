@@ -722,7 +722,6 @@ nodes.forEach(function(node,i){
 })
 
 nodes.forEach(function(node, i) {
-    node.rank = i+1
 
     node.associatedNodes = []
     node.associatedLinks.forEach(function(link, j) {
@@ -1252,7 +1251,6 @@ async function moveToCenter(currentNode) {
         lastNode.fx = null;
         lastNode.fy = null;
         d3.selectAll('.node').filter(function (d, i) {
-            console.log(d.id,lastNode.id)
             return d.id === lastNode.id
         })
             .transition().duration(2000)
@@ -2077,6 +2075,7 @@ function update(h) {
     // update position and text of label according to slider scale
     //handle.attr("cx", x(h));
    // console.log(h,x(h),)
+
     nodes.forEach(function(d,i){
         var idx =-1;
         //console.log("d ",d.name)
@@ -2086,6 +2085,7 @@ function update(h) {
                 idx=j
             }
             //console.log("d ",idx,d.name, simulation.nodes().length)
+                      console.log(node,idx)
 
         });
         //console.log("--------------")
@@ -2120,11 +2120,17 @@ function update(h) {
             if(idx!==-1){
                 simulation.nodes()[idx].associatedLinks.forEach(function(link,i){
                     var lIdx =-1;
+                                                  console.log(link)
+
                     simulation.force("link").links().forEach(function(llink,j){
+                        console.log(llink)
                         if(llink.index===link.index){
                             lIdx=j;
+                                                console.log("links splicen")
+
                         }
                     })
+
                     simulation.force("link").links().splice(lIdx,1)
 
                 })
